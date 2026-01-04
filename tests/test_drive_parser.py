@@ -106,3 +106,26 @@ def test_list_drive_items_prints(monkeypatch, capsys):
     captured = capsys.readouterr()
     assert 'Top-level files:' in captured.out
     assert 'file1.pdf' in captured.out
+
+
+def test_init_drive_session_with_fake_service(fake_drive_service, monkeypatch, capsys, tmp_path):
+    # ensure we start in a temp directory so no real files are touched
+    monkeypatch.chdir(tmp_path)
+    import drive_manager.drive_parser as dp
+
+    dp.init_drive_session('tester')
+    captured = capsys.readouterr()
+    assert 'Drive session initialized.' in captured.out
+    assert dp.service is not None
+    # username should be written
+    assert (tmp_path / 'drive_user.txt').read_text() == 'tester'
+
+
+def test_init_drive_session_handles_missing_credentials(monkeypatch, capsys):
+    import drive_manager.drive_parser as dp
+
+    # simulate authenticate_drive raising FileNotFoundError (missing credentials.json)
+    monkeypatch.setattr(dp, 'authenticate_drive', lambda: (_ for _ in ()).throw(FileNotFoundError('credentials not found')))
+    dp.init_drive_session()
+    captured = capsys.readouterr()
+    assert 'Failed to initialize Drive session' in captured.out
