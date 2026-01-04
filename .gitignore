@@ -1,0 +1,17 @@
+credentials.json
+token.pickle
+__pycache__/
+.pytest_cache/
+.vscode/
+pymupdf-venv/
+archives_registry*
+*_index
+test_mod.pdf
+test_split/
+tests/resources/
+pymupdf-venv/
+__pycache__/
+.pytest_cache/
+.vscode/
+archives_registry*
+*_index*
