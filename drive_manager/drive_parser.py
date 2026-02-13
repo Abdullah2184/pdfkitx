@@ -18,11 +18,18 @@ service: Optional[Any] = None
 
 
 def get_service() -> Optional[Any]:
-    """Return an authenticated Drive service or None if auth fails."""
+    """Return an authenticated Drive service or None if auth fails.
+    
+    Returns None if Drive service is unavailable, allowing non-Drive
+    functionality to continue working normally.
+    """
     global service
     if service is None:
         try:
             service = authenticate_drive()
+        except FileNotFoundError as e:
+            print(f"Drive service unavailable: {e}")
+            service = None
         except Exception as e:
             print(f"Failed to authenticate Drive: {e}")
             service = None

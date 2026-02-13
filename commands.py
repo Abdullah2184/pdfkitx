@@ -14,6 +14,7 @@ from drive_manager.drive_parser import handle_drive_command
 from zip_manager.zip_parser import handle_zip_command
 from pdf_manager.pdf_tools import handle_pdf_command
 from help_docs import handle_help_command
+from llm_manager.llm_auth import is_llm_available
 
 
 def _adapter_call(handler: Callable[[List[str]], None], tokens: List[str]):
@@ -125,6 +126,14 @@ def make_parser(prog: str = "tool") -> argparse.ArgumentParser:
     help_p.add_argument("topic", nargs="*", help="Topic to show")
     help_p.set_defaults(func=lambda ns: _adapter_call(handle_help_command, ns.topic or []))
 
+    # LLM (AI-powered command generation)
+    llm_p = subparsers.add_parser("llm", help="AI-powered command generation (BYOC)")
+    llm_sp = llm_p.add_subparsers(dest="sub", required=True)
+
+    llm_ask = llm_sp.add_parser("ask", help="Generate commands from natural language")
+    llm_ask.add_argument("request", nargs="+", help="Natural language request")
+    llm_ask.set_defaults(func=lambda ns: handle_llm_ask(" ".join(ns.request)))
+
     # RUN (script runner) - uses the SAME parser when executing lines
     run_p = subparsers.add_parser("run", help="Run commands from a script file")
     run_p.add_argument("script", help="Path to script file")
@@ -201,3 +210,15 @@ def parse_line_and_execute(line: str, parser: argparse.ArgumentParser) -> None:
     except SystemExit:
         # argparse throws SystemExit on parse errors or -h; capture that
         pass
+
+
+def handle_llm_ask(request: str) -> None:
+    """Handle 'llm ask' command - deferred to REPL for interactive approval."""
+    if not is_llm_available():
+        print("LLM functionality not available. Please set up llm_key.json (see README).")
+        return
+    
+    # This is a marker that signals the REPL to handle interactive approval
+    # In one-shot mode, we show a message that this only works in REPL
+    print("`llm ask` is only available in interactive REPL mode.")
+    print("Start the tool without arguments to enter REPL: pdfkitx")

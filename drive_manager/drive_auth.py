@@ -12,9 +12,21 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 def authenticate_drive() -> Any:
     """Authenticate with Google Drive using OAuth2 and return an API service.
 
+    This requires a credentials.json file set up by the user with their own
+    Google Cloud OAuth 2.0 credentials (BYOC model). See README for setup instructions.
+
     This will create `token.pickle` after the first successful run.
     """
     creds = None
+
+    # Verify credentials.json exists before attempting authentication
+    if not os.path.exists('credentials.json'):
+        error_msg = (
+            "credentials.json not found.\n"
+            "To use Google Drive features, you must set up your own OAuth credentials.\n"
+            "See README.md for detailed setup instructions under 'Google Drive Setup (BYOC)'"
+        )
+        raise FileNotFoundError(error_msg)
 
     # Load previously saved token if it exists
     if os.path.exists('token.pickle'):
@@ -37,7 +49,6 @@ def authenticate_drive() -> Any:
         service = build('drive', 'v3', credentials=creds)
         return service
     except FileNotFoundError as e:
-        print("credentials.json not found. Place OAuth credentials in the project root.")
         raise
     except Exception as e:
         print(f"Drive authentication failed: {e}")
